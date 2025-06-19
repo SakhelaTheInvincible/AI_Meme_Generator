@@ -17,14 +17,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      axios.defaults.headers.common['Authorization'] = Bearer ${token};
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setIsAuthenticated(true);
     }
   }, []);
 
   const login = (token: string) => {
     localStorage.setItem('token', token);
-    axios.defaults.headers.common['Authorization'] = Bearer ${token};
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setIsAuthenticated(true);
   };
 
