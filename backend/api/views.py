@@ -31,6 +31,9 @@ class MemeDetailView(generics.RetrieveAPIView):
     permission_classes = (permissions.AllowAny,)
     lookup_field = 'id'
 
+    def get_serializer_context(self):
+        return {'request': self.request}
+
 # Get memes by username
 class MemeListByUserView(generics.ListAPIView):
     serializer_class = MemeSerializer
@@ -40,11 +43,17 @@ class MemeListByUserView(generics.ListAPIView):
         username = self.kwargs['username']
         return Meme.objects.filter(user__username=username)
 
+    def get_serializer_context(self):
+        return {'request': self.request}
+
 # Get all memes
 class MemeListView(generics.ListAPIView):
     queryset = Meme.objects.all().order_by('-created_at')
     serializer_class = MemeSerializer
     permission_classes = (permissions.AllowAny,)
+
+    def get_serializer_context(self):
+        return {'request': self.request}
 
 # Upload meme
 class MemeUploadView(generics.CreateAPIView):
