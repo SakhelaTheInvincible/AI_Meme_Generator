@@ -15,7 +15,7 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       const response = await axios.post('/login/', { username, password });
-      login(response.data.access); // Assuming the token is in response.data.access
+      await login(response.data);
       router.push('/profile');
     } catch (error) {
       console.error('Login failed', error);

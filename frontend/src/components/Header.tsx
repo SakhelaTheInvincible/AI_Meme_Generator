@@ -25,6 +25,9 @@ export default function Header() {
               <Link href="/profile" className="hover:underline">
                 Profile
               </Link>
+              <Link href="/upload" className="hover:underline">
+                Upload Meme
+              </Link>
               <button onClick={handleLogout} className="hover:underline">
                 Logout
               </button>
