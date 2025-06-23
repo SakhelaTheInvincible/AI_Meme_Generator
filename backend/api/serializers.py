@@ -23,8 +23,15 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 class MemeSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = Meme
         fields = ('id', 'user', 'image', 'image_url', 'caption', 'created_at')
-        read_only_fields = ('user', 'created_at') 
+        read_only_fields = ('user', 'created_at')
+
+    def get_image(self, obj):
+        request = self.context.get('request')
+        if obj.image and hasattr(obj.image, 'url'):
+            return request.build_absolute_uri(obj.image.url)
+        return None 

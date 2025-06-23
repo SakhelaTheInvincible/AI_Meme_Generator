@@ -148,4 +148,9 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+# Ignore all Django migrations folders
+**/migrations/
+**/migrations/*.py
+**/migrations/*.pyc
+
 # End of https://www.toptal.com/developers/gitignore/api/django,python 
