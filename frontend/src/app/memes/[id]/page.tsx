@@ -12,16 +12,40 @@ interface Meme {
   image: string | null;
   image_url: string | null;
   caption: string | null;
+  upvote: number;
+  downvote: number;
+  userVote?: 'upvote' | 'downvote' | null;
 }
 
 export default function MemeDetailPage() {
   const router = useRouter();
   const params = useParams();
   const { id } = params;
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [meme, setMeme] = useState<Meme | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const handleVote = async (voteType: 'upvote' | 'downvote') => {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+    if (!meme) return;
+
+    try {
+      const res = await axios.post(`/memes/${meme.id}/${voteType}/`);
+      
+      setMeme({
+        ...meme,
+        upvote: res.data.upvote,
+        downvote: res.data.downvote,
+        userVote: meme.userVote === voteType ? null : voteType,
+      });
+    } catch (err) {
+      console.error("Failed to vote", err);
+    }
+  };
 
   useEffect(() => {
     const fetchMeme = async () => {
@@ -75,6 +99,29 @@ export default function MemeDetailPage() {
                 ) : (
                 <div className="w-full h-96 bg-gray-200 flex items-center justify-center mb-4">No Image</div>
                 )}
+                <div className="flex items-center justify-between">
+                    <p className="text-gray-700 text-lg">{meme.caption}</p>
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => handleVote('upvote')}
+                            className={`flex items-center justify-center gap-2 p-2 rounded-full transition-colors ${meme.userVote === 'upvote' ? 'text-orange-500 bg-orange-100' : 'text-gray-600 hover:bg-gray-200'}`}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                                <path fillRule="evenodd" d="M11.47 2.47a.75.75 0 011.06 0l7.5 7.5a.75.75 0 11-1.06 1.06l-6.22-6.22V21a.75.75 0 01-1.5 0V4.81L4.03 11.03a.75.75 0 01-1.06-1.06l7.5-7.5z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-lg font-bold">{meme.upvote}</span>
+                        </button>
+                        <button
+                            onClick={() => handleVote('downvote')}
+                            className={`flex items-center justify-center gap-2 p-2 rounded-full transition-colors ${meme.userVote === 'downvote' ? 'text-blue-500 bg-blue-100' : 'text-gray-600 hover:bg-gray-200'}`}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                                <path fillRule="evenodd" d="M12.53 21.53a.75.75 0 01-1.06 0l-7.5-7.5a.75.75 0 011.06-1.06L11.25 19.19V3a.75.75 0 011.5 0v16.19l6.22-6.22a.75.75 0 111.06 1.06l-7.5 7.5z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-lg font-bold">{meme.downvote}</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
