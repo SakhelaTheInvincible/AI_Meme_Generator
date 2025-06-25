@@ -5,7 +5,7 @@
 ### 1. Clone the Repository
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/SakhelaTheInvincible/AI_Meme_Generator.git
 cd "Meme Generator"
 ```
 
