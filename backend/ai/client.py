@@ -35,10 +35,13 @@ def prompt_image_context(context):
     - Each caption should be short (5-10 words)
     - Use sarcasm, irony, relatable jokes
     - Return ONLY the captions, no explanations, no labels, no emojis, no numbering
+    - !!!Do not generate more captions than the number of images!!!
     
     IMPORTANT: Count the images/panels in the description carefully:
     - If description mentions ONE image/scene → return ONE caption
     - If description mentions split image/multiple panels/before-after → return multiple captions separated by newlines
+    - Captions must be in order like images: left to right, top to bottom
+    - Do not provide captions like this example: cat: "what is going on?", just provide "what is going on?"
     
     Examples:
     Description: "a man is looking sad at hot dog which is on the street ground."
@@ -62,3 +65,6 @@ def ai_call(prompt):
     except Exception as e:
         print(f"Error generating captions: {e}")
         return None
+
+def botsai():
+    return os.getenv("BOTSAI_API_KEY")

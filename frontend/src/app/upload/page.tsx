@@ -52,10 +52,15 @@ export default function UploadMemePage() {
       
       await axios.post("/memes/upload/", formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        timeout: 120000, // 2 minutes timeout for AI processing
       });
       router.push("/");
     } catch (err: any) {
-      setError(err?.response?.data?.detail || "Upload failed.");
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        setError("Processing is taking longer than expected. Please check your memes later.");
+      } else {
+        setError(err?.response?.data?.detail || "Upload failed.");
+      }
     } finally {
       setLoading(false);
     }
@@ -109,12 +114,18 @@ export default function UploadMemePage() {
             </div>
           )}
           {error && <div className="text-red-500 text-center">{error}</div>}
+          {loading && (
+            <div className="text-center text-blue-600">
+              <div className="mb-2">AI is generating meme captions...</div>
+              <div className="text-sm text-gray-500">This may take up to 2 minutes</div>
+            </div>
+          )}
           <button
             type="submit"
             className="w-full bg-gray-800 text-white py-2 rounded hover:bg-gray-700 disabled:opacity-50"
             disabled={loading}
           >
-            {loading ? "Uploading..." : "Upload Meme"}
+            {loading ? "Processing with AI..." : "Upload & Generate Meme"}
           </button>
         </form>
       </div>

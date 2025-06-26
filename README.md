@@ -22,6 +22,7 @@ pip install -r requirements.txt
 Create `.env` file in backend directory:
 ```
 DEEPSEEK_API_KEY="Some key"
+BOTSAI_API_KEY="Some key"
 ```
 
 Update `settings.py` database configuration:
