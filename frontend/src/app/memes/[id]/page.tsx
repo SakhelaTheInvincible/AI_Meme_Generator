@@ -100,7 +100,6 @@ export default function MemeDetailPage() {
                 <div className="w-full h-96 bg-gray-200 flex items-center justify-center mb-4">No Image</div>
                 )}
                 <div className="flex items-center justify-between">
-                    <p className="text-gray-700 text-lg">{meme.caption}</p>
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => handleVote('upvote')}
