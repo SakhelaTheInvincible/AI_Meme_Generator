@@ -22,35 +22,6 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     parser_classes = (MultiPartParser, FormParser)
 
-    @transaction.atomic
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-        # save meme first to get the image path
-        meme = serializer.save(user=self.request.user)
-        image_source = meme.image.path if meme.image else meme.image_url
-             
-        if image_source:
-            try:
-                context = get_image_context(image_source)
-                captions = generate_meme_captions(context)
-                final_meme = meme_with_captions(image_source, captions)
-                
-                meme.caption = "\n".join(captions)
-
-                buffer = io.BytesIO()
-                final_meme.save(buffer, format='JPEG', quality=90)
-                buffer.seek(0)
-                
-                filename = f"ai_meme_{meme.id}.jpg"
-                meme.image.save(
-                    filename,
-                    ContentFile(buffer.read()),
-                    save=False
-                )
-                meme.save()
-            except Exception as e:
-                pass
-
 class LoginView(TokenObtainPairView):
     permission_classes = (permissions.AllowAny,)
 
@@ -100,6 +71,7 @@ class MemeUploadView(generics.CreateAPIView):
 
     @transaction.atomic
     def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
         # save meme first to get the image path
         meme = serializer.save(user=self.request.user)
         image_source = meme.image.path if meme.image else meme.image_url
