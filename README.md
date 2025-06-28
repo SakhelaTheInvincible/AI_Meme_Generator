@@ -1,6 +1,23 @@
-# Meme Generator
+# 🎭 AI-Powered Meme Generator
 
-## Setup
+> 🤖 Automatically generate hilarious memes with AI-powered caption creation
+
+## 📋 Project Description
+
+An intelligent meme generation platform that combines artificial intelligence with modern web technologies. Upload any image and watch as our AI creates contextually relevant, humorous captions while intelligently placing text for maximum comedic impact.
+
+**🌟 Key Features:**
+- 🎯 AI-powered caption generation using advanced language models
+- 🖼️ Smart image analysis and text placement algorithms  
+- 📱 Modern responsive UI with glassmorphism design
+- 👤 User authentication and social voting system
+- 🔄 Support for both single and multi-panel meme formats
+
+**🛠️ Tech Stack:** Django REST API + Next.js + AI Integration (DeepSeek, BotsAI) + OpenCV
+
+---
+
+## ⚙️ Setup
 
 ### 1. Clone the Repository
 
