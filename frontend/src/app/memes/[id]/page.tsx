@@ -5,6 +5,18 @@ import { useRouter, useParams } from "next/navigation";
 import axios from "@/lib/axios";
 import { useAuth } from "@/context/AuthContext";
 import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { VoteControls } from '@/components/ui/VoteButton';
+import { formatTimeAgo } from '@/lib/utils';
+import { 
+  ArrowLeftIcon, 
+  UserIcon,
+  CalendarIcon,
+  EyeIcon 
+} from '@heroicons/react/24/outline';
 
 interface Meme {
   id: number;
@@ -14,6 +26,7 @@ interface Meme {
   caption: string | null;
   upvote: number;
   downvote: number;
+  created_at?: string;
   userVote?: 'upvote' | 'downvote' | null;
 }
 
@@ -64,65 +77,164 @@ export default function MemeDetailPage() {
     if (id) fetchMeme();
   }, [id]);
 
-  if (loading) return <div className="flex justify-center py-12">Loading...</div>;
-  if (error) return <div className="flex justify-center py-12 text-red-500">{error}</div>;
+  if (loading) {
+    return (
+      <div className="flex justify-center py-20">
+        <LoadingSpinner size="xl" variant="pulse" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <div className="text-6xl mb-4">😿</div>
+          <h2 className="text-2xl font-bold text-white mb-2">Meme Not Found</h2>
+          <p className="text-white/60 mb-6">{error}</p>
+          <Button onClick={() => router.push('/')}>
+            Back to Home
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
+
   if (!meme) return null;
 
   return (
-    <div className="min-h-screen bg-gray-100 flex justify-center items-start py-12 px-4">
-        <div className="flex w-full max-w-4xl items-start gap-8">
-            <div className="mt-8 flex-shrink-0">
-                <button 
-                    onClick={() => router.back()}
-                    className="flex items-center justify-center w-12 h-12 bg-white rounded-full shadow-md hover:bg-gray-200 transition-colors duration-200 text-black"
-                    aria-label="Go back"
+    <div className="min-h-screen py-8">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-40 right-40 w-96 h-96 bg-purple-400 rounded-full opacity-10 animate-float"></div>
+        <div className="absolute bottom-40 left-40 w-80 h-80 bg-pink-400 rounded-full opacity-10 animate-float" style={{ animationDelay: '2s' }}></div>
+      </div>
+
+      <div className="container mx-auto px-6 relative z-10">
+        <motion.div
+          className="max-w-4xl mx-auto"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          {/* Back Button */}
+          <motion.div 
+            className="mb-6"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Button
+              variant="glass"
+              size="sm"
+              onClick={() => router.back()}
+              className="flex items-center space-x-2"
+            >
+              <ArrowLeftIcon className="w-4 h-4" />
+              <span>Back</span>
+            </Button>
+          </motion.div>
+
+          <Card variant="glass" className="overflow-hidden">
+            {/* Header */}
+            <CardHeader className="border-b border-white/10">
+              <div className="flex items-center justify-between">
+                <Link
+                  href={user && user.username === meme.user ? '/profile' : `/users/${meme.user}`}
+                  className="flex items-center space-x-3 group hover:bg-white/10 rounded-lg p-2 -m-2 transition-colors"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                </button>
-            </div>
-            <div className="bg-white rounded-lg shadow-xl p-8 w-full">
-                <div className="mb-4 text-lg font-semibold text-gray-800">
-                By:{" "}
-                <Link 
-                    href={user && user.username === meme.user ? '/profile' : `/users/${meme.user}`}
-                    className="text-blue-600 hover:underline"
-                >
-                    {meme.user}
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center">
+                    <UserIcon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white group-hover:text-purple-300 transition-colors">
+                      {meme.user}
+                    </h2>
+                    {meme.created_at && (
+                      <div className="flex items-center space-x-1 text-white/60 text-sm">
+                        <CalendarIcon className="w-4 h-4" />
+                        <span>{formatTimeAgo(meme.created_at)}</span>
+                      </div>
+                    )}
+                  </div>
                 </Link>
+
+
+              </div>
+            </CardHeader>
+
+            <CardContent className="p-0">
+              <div className="flex flex-col lg:flex-row">
+                {/* Image Section */}
+                <div className="flex-1 p-6">
+                  <motion.div
+                    className="relative group"
+                    whileHover={{ scale: 1.02 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {meme.image ? (
+                      <img 
+                        src={meme.image} 
+                        alt={meme.caption || 'Meme'} 
+                        className="w-full max-h-[80vh] object-contain rounded-lg shadow-2xl" 
+                      />
+                    ) : meme.image_url ? (
+                      <img 
+                        src={meme.image_url} 
+                        alt={meme.caption || 'Meme'} 
+                        className="w-full max-h-[80vh] object-contain rounded-lg shadow-2xl" 
+                      />
+                    ) : (
+                      <div className="w-full h-96 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex items-center justify-center">
+                        <p className="text-gray-500 text-lg">No Image Available</p>
+                      </div>
+                    )}
+                  </motion.div>
+
+
                 </div>
-                {meme.image ? (
-                <img src={meme.image} alt={meme.caption || ''} className="w-full h-auto object-contain mb-4 max-h-[70vh]" />
-                ) : meme.image_url ? (
-                <img src={meme.image_url} alt={meme.caption || ''} className="w-full h-auto object-contain mb-4 max-h-[70vh]" />
-                ) : (
-                <div className="w-full h-96 bg-gray-200 flex items-center justify-center mb-4">No Image</div>
-                )}
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => handleVote('upvote')}
-                            className={`flex items-center justify-center gap-2 p-2 rounded-full transition-colors ${meme.userVote === 'upvote' ? 'text-orange-500 bg-orange-100' : 'text-gray-600 hover:bg-gray-200'}`}
+
+                {/* Vote Section */}
+                <div className="lg:w-48 p-6 border-t lg:border-t-0 lg:border-l border-white/10">
+                  <div className="flex lg:flex-col items-center justify-center h-full space-x-4 lg:space-x-0 lg:space-y-6">
+                    <VoteControls
+                      upvotes={meme.upvote}
+                      downvotes={meme.downvote}
+                      userVote={meme.userVote}
+                      onVote={handleVote}
+                      disabled={!isAuthenticated}
+                      orientation="vertical"
+                    />
+
+                    {/* Share Section */}
+                    <motion.div
+                      className="text-center"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.6 }}
+                    >
+                      <p className="text-white/60 text-sm mb-2">Share this meme</p>
+                      <div className="flex items-center space-x-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => navigator.clipboard.writeText(window.location.href)}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                                <path fillRule="evenodd" d="M11.47 2.47a.75.75 0 011.06 0l7.5 7.5a.75.75 0 11-1.06 1.06l-6.22-6.22V21a.75.75 0 01-1.5 0V4.81L4.03 11.03a.75.75 0 01-1.06-1.06l7.5-7.5z" clipRule="evenodd" />
-                            </svg>
-                            <span className="text-lg font-bold">{meme.upvote}</span>
-                        </button>
-                        <button
-                            onClick={() => handleVote('downvote')}
-                            className={`flex items-center justify-center gap-2 p-2 rounded-full transition-colors ${meme.userVote === 'downvote' ? 'text-blue-500 bg-blue-100' : 'text-gray-600 hover:bg-gray-200'}`}
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                                <path fillRule="evenodd" d="M12.53 21.53a.75.75 0 01-1.06 0l-7.5-7.5a.75.75 0 011.06-1.06L11.25 19.19V3a.75.75 0 011.5 0v16.19l6.22-6.22a.75.75 0 111.06 1.06l-7.5 7.5z" clipRule="evenodd" />
-                            </svg>
-                            <span className="text-lg font-bold">{meme.downvote}</span>
-                        </button>
-                    </div>
+                          Copy Link
+                        </Button>
+                      </div>
+                    </motion.div>
+                  </div>
                 </div>
-            </div>
-        </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
     </div>
   );
 } 

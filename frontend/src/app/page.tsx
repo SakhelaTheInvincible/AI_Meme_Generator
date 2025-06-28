@@ -5,6 +5,24 @@ import { useAuth } from "@/context/AuthContext";
 import axios from "@/lib/axios";
 import { useRouter } from "next/navigation";
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { LoadingSpinner, LoadingSkeleton } from '@/components/ui/LoadingSpinner';
+import { VoteControls } from '@/components/ui/VoteButton';
+import { formatTimeAgo } from '@/lib/utils';
+import { 
+  FireIcon, 
+  ClockIcon, 
+  UserIcon,
+  EyeIcon,
+  HeartIcon,
+  ChatBubbleLeftIcon
+} from '@heroicons/react/24/outline';
+import { 
+  FireIcon as FireIconSolid,
+  ClockIcon as ClockIconSolid 
+} from '@heroicons/react/24/solid';
 
 interface Meme {
   id: number;
@@ -85,102 +103,231 @@ export default function Home() {
   }, [sortBy]);
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-gray-100">
-      <div className="flex flex-col items-center gap-4 mt-8">
-        <div className="flex gap-4">
-          <button
-            className={`px-4 py-2 rounded text-white ${view === 'all' ? 'bg-gray-800' : 'bg-gray-600'}`}
-            onClick={() => setView('all')}
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <motion.div 
+        className="relative overflow-hidden py-20"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-900/20 to-pink-900/20" />
+        <div className="relative container mx-auto px-6 text-center">
+          <motion.h1 
+            className="text-5xl md:text-7xl font-bold gradient-text mb-6"
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
           >
-            All Memes
-          </button>
-          {isAuthenticated && (
-            <button
-              className={`px-4 py-2 rounded text-white ${view === 'mine' ? 'bg-gray-800' : 'bg-gray-600'}`}
-              onClick={() => setView('mine')}
+            Discover Amazing Memes
+          </motion.h1>
+          <motion.p 
+            className="text-xl text-white/80 mb-8 max-w-2xl mx-auto"
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
+            Create, share, and vote on the funniest memes with our AI-powered platform
+          </motion.p>
+          
+          {!isAuthenticated && (
+            <motion.div 
+              className="flex flex-col sm:flex-row gap-4 justify-center"
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
             >
-              My Memes
-            </button>
+              <Button size="xl" asChild>
+                <Link href="/register">Get Started Free</Link>
+              </Button>
+              <Button variant="outline" size="xl" asChild>
+                <Link href="/login">Sign In</Link>
+              </Button>
+            </motion.div>
           )}
         </div>
-        
-        <div className="flex items-center gap-2">
-          <span className="text-gray-700 font-medium">Sort by:</span>
-          <div className="relative">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as 'newest' | 'trending')}
-              className="appearance-none bg-white border border-gray-300 rounded px-4 py-2 pr-8 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 cursor-pointer"
+      </motion.div>
+
+      {/* Controls */}
+      <div className="container mx-auto px-6 py-8">
+        <motion.div 
+          className="flex flex-col md:flex-row gap-4 items-center justify-between mb-8"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6 }}
+        >
+          {/* View Toggle */}
+          <div className="flex items-center space-x-2 glass rounded-xl p-1">
+            <Button
+              variant={view === 'all' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setView('all')}
+              className="relative"
             >
-              <option value="newest">Newest</option>
-              <option value="trending">Trending</option>
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-              <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-              </svg>
+              All Memes
+              {view === 'all' && (
+                <motion.div 
+                  className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-lg -z-10"
+                  layoutId="activeView"
+                />
+              )}
+            </Button>
+            {isAuthenticated && (
+              <Button
+                variant={view === 'mine' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setView('mine')}
+                className="relative"
+              >
+                My Memes
+                {view === 'mine' && (
+                  <motion.div 
+                    className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-lg -z-10"
+                    layoutId="activeView"
+                  />
+                )}
+              </Button>
+            )}
+          </div>
+
+          {/* Sort Controls */}
+          <div className="flex items-center space-x-3">
+            <span className="text-white/80 font-medium">Sort by:</span>
+            <div className="flex items-center space-x-2 glass rounded-xl p-1">
+              <Button
+                variant={sortBy === 'newest' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setSortBy('newest')}
+                className="flex items-center space-x-2"
+              >
+                {sortBy === 'newest' ? <ClockIconSolid className="w-4 h-4" /> : <ClockIcon className="w-4 h-4" />}
+                <span>Newest</span>
+              </Button>
+              <Button
+                variant={sortBy === 'trending' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setSortBy('trending')}
+                className="flex items-center space-x-2"
+              >
+                {sortBy === 'trending' ? <FireIconSolid className="w-4 h-4" /> : <FireIcon className="w-4 h-4" />}
+                <span>Trending</span>
+              </Button>
             </div>
           </div>
-        </div>
-      </div>
-      
-      <div className="w-full max-w-8xl p-8 mx-auto">
-        {loading ? (
-          <div className="flex justify-center py-12">Loading...</div>
-        ) : memes.length === 0 ? (
-          <div className="flex justify-center py-12">No memes found.</div>
-        ) : (
-          <div className="grid grid-cols-1 gap-6 mt-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {memes.map((meme) => (
-              <div
-                key={meme.id}
-                className="bg-white rounded-lg shadow hover:shadow-lg overflow-hidden flex flex-row"
-              >
-                <div className="flex-grow flex flex-col">
-                  <div className="p-2 text-center bg-gray-50">
-                    <Link
-                      href={user && user.username === meme.user ? '/profile' : `/users/${meme.user}`}
-                      className="font-semibold text-gray-800 hover:underline"
-                    >
-                      {meme.user}
-                    </Link>
-                  </div>
-                  <Link href={`/memes/${meme.id}`} className="block">
-                    {meme.image ? (
-                      <img src={meme.image} alt={meme.user} className="w-full h-60 object-cover" />
-                    ) : meme.image_url ? (
-                      <img src={meme.image_url} alt={meme.user} className="w-full h-60 object-cover" />
-                    ) : (
-                      <div className="w-full h-60 bg-gray-200 flex items-center justify-center">No Image</div>
-                    )}
-                  </Link>
-                </div>
+        </motion.div>
 
-                <div className="flex flex-col items-center justify-center p-2 bg-gray-100 w-16">
-                  <button
-                    onClick={() => handleVote(meme, 'upvote')}
-                    className={`flex items-center justify-center p-1 rounded-full transition-colors ${meme.userVote === 'upvote' ? 'text-orange-500 bg-orange-100' : 'text-gray-500 hover:bg-gray-200'}`}
-                    aria-label="Upvote"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                      <path fillRule="evenodd" d="M11.47 2.47a.75.75 0 011.06 0l7.5 7.5a.75.75 0 11-1.06 1.06l-6.22-6.22V21a.75.75 0 01-1.5 0V4.81L4.03 11.03a.75.75 0 01-1.06-1.06l7.5-7.5z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                  <span className="font-bold text-gray-800 my-1">{meme.upvote - meme.downvote}</span>
-                  <button
-                    onClick={() => handleVote(meme, 'downvote')}
-                    className={`flex items-center justify-center p-1 rounded-full transition-colors ${meme.userVote === 'downvote' ? 'text-blue-500 bg-blue-100' : 'text-gray-500 hover:bg-gray-200'}`}
-                    aria-label="Downvote"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                      <path fillRule="evenodd" d="M12.53 21.53a.75.75 0 01-1.06 0l-7.5-7.5a.75.75 0 011.06-1.06L11.25 19.19V3a.75.75 0 011.5 0v16.19l6.22-6.22a.75.75 0 111.06 1.06l-7.5 7.5z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Memes Grid */}
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div 
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Card key={i} className="h-96">
+                  <div className="p-4">
+                    <LoadingSkeleton lines={3} />
+                  </div>
+                  <div className="h-60 bg-gray-200 rounded-lg mx-4 mb-4">
+                    <LoadingSpinner size="lg" className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+                  </div>
+                </Card>
+              ))}
+            </motion.div>
+          ) : memes.length === 0 ? (
+            <motion.div 
+              className="flex flex-col items-center justify-center py-20"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="text-6xl mb-4">🎭</div>
+              <h3 className="text-2xl font-bold text-white mb-2">No memes found</h3>
+              <p className="text-white/60 mb-6">Be the first to upload some amazing content!</p>
+              {isAuthenticated && (
+                <Button asChild>
+                  <Link href="/upload">Upload Your First Meme</Link>
+                </Button>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div 
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              {memes.map((meme, index) => (
+                <motion.div
+                  key={meme.id}
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  layout
+                >
+                  <Card variant="glass" className="overflow-hidden group">
+                    {/* User Header */}
+                    <div className="p-4 border-b border-white/10">
+                      <Link
+                        href={user && user.username === meme.user ? '/profile' : `/users/${meme.user}`}
+                        className="flex items-center space-x-3 group/user hover:bg-white/10 rounded-lg p-2 -m-2 transition-colors"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center">
+                          <UserIcon className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-white group-hover/user:text-purple-300 transition-colors">
+                            {meme.user}
+                          </p>
+                          <p className="text-xs text-white/60">
+                            {formatTimeAgo(meme.created_at)}
+                          </p>
+                        </div>
+                      </Link>
+                    </div>
+
+                    {/* Image */}
+                    <Link href={`/memes/${meme.id}`} className="block relative">
+                      {meme.image ? (
+                        <img 
+                          src={meme.image} 
+                          alt={meme.caption || meme.user} 
+                          className="w-full h-80 object-cover transition-transform duration-300 group-hover:scale-105" 
+                        />
+                      ) : meme.image_url ? (
+                        <img 
+                          src={meme.image_url} 
+                          alt={meme.caption || meme.user} 
+                          className="w-full h-80 object-cover transition-transform duration-300 group-hover:scale-105" 
+                        />
+                      ) : (
+                        <div className="w-full h-80 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                          <p className="text-gray-500">No Image</p>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                        <EyeIcon className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      </div>
+                    </Link>
+
+                    {/* Actions */}
+                    <div className="p-4 flex justify-center">
+                      <VoteControls
+                        upvotes={meme.upvote}
+                        downvotes={meme.downvote}
+                        userVote={meme.userVote}
+                        onVote={(type) => handleVote(meme, type)}
+                        disabled={!isAuthenticated}
+                        orientation="horizontal"
+                      />
+                    </div>
+                  </Card>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

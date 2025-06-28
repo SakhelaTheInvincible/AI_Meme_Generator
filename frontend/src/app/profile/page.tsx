@@ -5,6 +5,25 @@ import { useAuth } from '@/context/AuthContext';
 import axios from '@/lib/axios';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { VoteControls } from '@/components/ui/VoteButton';
+import { formatTimeAgo } from '@/lib/utils';
+import { 
+  UserIcon, 
+  EnvelopeIcon,
+  PhotoIcon,
+  TrophyIcon,
+  FireIcon,
+  ClockIcon,
+  EyeIcon
+} from '@heroicons/react/24/outline';
+import { 
+  FireIcon as FireIconSolid,
+  ClockIcon as ClockIconSolid 
+} from '@heroicons/react/24/solid';
 
 interface UserProfile {
   username: string;
@@ -64,7 +83,7 @@ export default function ProfilePage() {
   };
 
   useEffect(() => {
-    if (authLoading) return; // Wait until auth check is done
+    if (authLoading) return;
     if (!isAuthenticated) {
       router.push('/login');
       return;
@@ -100,7 +119,6 @@ export default function ProfilePage() {
     if (user) fetchMemes();
   }, [user]);
 
-  // Re-sort when sortBy changes
   useEffect(() => {
     setMemes(prevMemes => sortMemes(prevMemes));
   }, [sortBy]);
@@ -108,7 +126,7 @@ export default function ProfilePage() {
   if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-gray-500">Loading...</p>
+        <LoadingSpinner size="xl" variant="pulse" />
       </div>
     );
   }
@@ -116,100 +134,214 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-red-500">Could not load profile. Please try again.</p>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <div className="text-6xl mb-4">😕</div>
+          <h2 className="text-2xl font-bold text-white mb-2">Profile Not Found</h2>
+          <p className="text-white/60 mb-6">Could not load profile. Please try again.</p>
+          <Button onClick={() => window.location.reload()}>
+            Reload Page
+          </Button>
+        </motion.div>
       </div>
     );
   }
 
+  const totalUpvotes = memes.reduce((sum, meme) => sum + meme.upvote, 0);
+  const totalScore = memes.reduce((sum, meme) => sum + (meme.upvote - meme.downvote), 0);
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="container py-12 mx-auto">
-        <div className="w-full max-w-2xl p-8 mx-auto space-y-6 bg-white rounded-lg shadow-xl">
-          <h1 className="text-3xl font-bold text-center text-gray-900">
-            User Profile
-          </h1>
-          <div className="space-y-4 text-lg text-gray-800">
-            <div className="p-4 rounded-lg bg-gray-50">
-              <strong className="font-medium text-gray-600">Username:</strong> {user.username}
-            </div>
-            <div className="p-4 rounded-lg bg-gray-50">
-              <strong className="font-medium text-gray-600">Email:</strong> {user.email}
-            </div>
-          </div>
-        </div>
-        
-        <div className="w-full max-w-6xl mx-auto mt-8 text-center">
-          <div className="flex flex-col items-center gap-4 mb-8">
-            <h2 className="text-3xl font-bold text-black">My Memes</h2>
+    <div className="min-h-screen py-8">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 right-20 w-80 h-80 bg-purple-400 rounded-full opacity-10 animate-float"></div>
+        <div className="absolute bottom-20 left-20 w-96 h-96 bg-pink-400 rounded-full opacity-10 animate-float" style={{ animationDelay: '1.5s' }}></div>
+      </div>
+
+      <div className="container mx-auto px-6 relative z-10">
+        {/* Profile Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="max-w-4xl mx-auto mb-8"
+        >
+          <Card variant="glass">
+            <CardHeader className="text-center">
+              <div className="mx-auto w-24 h-24 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center mb-4">
+                <UserIcon className="w-12 h-12 text-white" />
+              </div>
+              <CardTitle className="text-4xl font-bold gradient-text mb-2">
+                {user.username}
+              </CardTitle>
+              <div className="flex items-center justify-center space-x-2 text-white/60">
+                <EnvelopeIcon className="w-4 h-4" />
+                <span>{user.email}</span>
+              </div>
+            </CardHeader>
+
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                <motion.div
+                  className="p-4 rounded-lg bg-white/10"
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <PhotoIcon className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-white">{memes.length}</div>
+                  <div className="text-white/60 text-sm">Memes Created</div>
+                </motion.div>
+
+                <motion.div
+                  className="p-4 rounded-lg bg-white/10"
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <TrophyIcon className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-white">{totalUpvotes}</div>
+                  <div className="text-white/60 text-sm">Total Upvotes</div>
+                </motion.div>
+
+                <motion.div
+                  className="p-4 rounded-lg bg-white/10"
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <FireIcon className="w-8 h-8 text-orange-400 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-white">{totalScore}</div>
+                  <div className="text-white/60 text-sm">Total Score</div>
+                </motion.div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Memes Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="max-w-7xl mx-auto"
+        >
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-8">
+            <h2 className="text-3xl font-bold gradient-text">My Memes</h2>
             
             {memes.length > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-gray-700 font-medium">Sort by:</span>
-                <div className="relative">
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as 'newest' | 'trending')}
-                    className="appearance-none bg-white border border-gray-300 rounded px-4 py-2 pr-8 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 cursor-pointer"
+              <div className="flex items-center space-x-3">
+                <span className="text-white/80 font-medium">Sort by:</span>
+                <div className="flex items-center space-x-2 glass rounded-xl p-1">
+                  <Button
+                    variant={sortBy === 'newest' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setSortBy('newest')}
+                    className="flex items-center space-x-2"
                   >
-                    <option value="newest">Newest</option>
-                    <option value="trending">Trending</option>
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                    </svg>
-                  </div>
+                    {sortBy === 'newest' ? <ClockIconSolid className="w-4 h-4" /> : <ClockIcon className="w-4 h-4" />}
+                    <span>Newest</span>
+                  </Button>
+                  <Button
+                    variant={sortBy === 'trending' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setSortBy('trending')}
+                    className="flex items-center space-x-2"
+                  >
+                    {sortBy === 'trending' ? <FireIconSolid className="w-4 h-4" /> : <FireIcon className="w-4 h-4" />}
+                    <span>Trending</span>
+                  </Button>
                 </div>
               </div>
             )}
           </div>
-          
-          {memes.length === 0 ? (
-            <div className="text-gray-500">You haven't uploaded any memes yet.</div>
-          ) : (
-            <div className="flex flex-wrap justify-center gap-8">
-              {memes.map((meme) => (
-                <div
-                  key={meme.id}
-                  className="w-80 bg-white rounded-lg shadow hover:shadow-lg overflow-hidden flex flex-row"
-                >
-                  <div className="flex-grow">
-                    <Link href={`/memes/${meme.id}`} className="block">
-                      {meme.image ? (
-                        <img src={meme.image} alt="My Meme" className="w-full h-60 object-cover" />
-                      ) : meme.image_url ? (
-                        <img src={meme.image_url} alt="My Meme" className="w-full h-60 object-cover" />
-                      ) : (
-                        <div className="w-full h-60 bg-gray-200 flex items-center justify-center">No Image</div>
-                      )}
-                    </Link>
-                  </div>
-                  <div className="flex flex-col items-center justify-center p-2 bg-gray-100 w-16">
-                    <button
-                      onClick={() => handleVote(meme, 'upvote')}
-                      className={`flex items-center justify-center p-1 rounded-full transition-colors ${meme.userVote === 'upvote' ? 'text-orange-500 bg-orange-100' : 'text-gray-500 hover:bg-gray-200'}`}
-                      aria-label="Upvote"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                        <path fillRule="evenodd" d="M11.47 2.47a.75.75 0 011.06 0l7.5 7.5a.75.75 0 11-1.06 1.06l-6.22-6.22V21a.75.75 0 01-1.5 0V4.81L4.03 11.03a.75.75 0 01-1.06-1.06l7.5-7.5z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                    <span className="font-bold text-gray-800 my-1">{meme.upvote - meme.downvote}</span>
-                    <button
-                      onClick={() => handleVote(meme, 'downvote')}
-                      className={`flex items-center justify-center p-1 rounded-full transition-colors ${meme.userVote === 'downvote' ? 'text-blue-500 bg-blue-100' : 'text-gray-500 hover:bg-gray-200'}`}
-                      aria-label="Downvote"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                        <path fillRule="evenodd" d="M12.53 21.53a.75.75 0 01-1.06 0l-7.5-7.5a.75.75 0 011.06-1.06L11.25 19.19V3a.75.75 0 011.5 0v16.19l6.22-6.22a.75.75 0 111.06 1.06l-7.5 7.5z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+
+          <AnimatePresence mode="wait">
+            {memes.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center py-20"
+              >
+                <div className="text-6xl mb-4">🎨</div>
+                <h3 className="text-2xl font-bold text-white mb-2">No memes yet!</h3>
+                <p className="text-white/60 mb-6">Start creating amazing memes with AI</p>
+                <Button asChild>
+                  <Link href="/upload">Upload Your First Meme</Link>
+                </Button>
+              </motion.div>
+            ) : (
+              <motion.div
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                {memes.map((meme, index) => (
+                  <motion.div
+                    key={meme.id}
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    layout
+                  >
+                    <Card variant="glass" className="overflow-hidden group">
+                      {/* User Header */}
+                      <div className="p-4 border-b border-white/10">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center">
+                            <UserIcon className="w-4 h-4 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-white">
+                              {meme.user}
+                            </p>
+                            <p className="text-xs text-white/60">
+                              {formatTimeAgo(meme.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Image */}
+                      <Link href={`/memes/${meme.id}`} className="block relative">
+                        {meme.image ? (
+                          <img 
+                            src={meme.image} 
+                            alt={meme.caption || meme.user} 
+                            className="w-full h-80 object-cover transition-transform duration-300 group-hover:scale-105" 
+                          />
+                        ) : meme.image_url ? (
+                          <img 
+                            src={meme.image_url} 
+                            alt={meme.caption || meme.user} 
+                            className="w-full h-80 object-cover transition-transform duration-300 group-hover:scale-105" 
+                          />
+                        ) : (
+                          <div className="w-full h-80 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                            <p className="text-gray-500">No Image</p>
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                          <EyeIcon className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        </div>
+                      </Link>
+
+                      {/* Actions */}
+                      <div className="p-4 flex justify-center">
+                        <VoteControls
+                          upvotes={meme.upvote}
+                          downvotes={meme.downvote}
+                          userVote={meme.userVote}
+                          onVote={(type) => handleVote(meme, type)}
+                          disabled={!isAuthenticated}
+                          orientation="horizontal"
+                        />
+                      </div>
+                    </Card>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </div>
     </div>
   );

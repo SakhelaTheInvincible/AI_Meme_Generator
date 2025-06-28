@@ -81,7 +81,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'meme_generator',
         'USER': 'postgres',
-        'PASSWORD': 'password',
+        'PASSWORD': 'l.d.messi01',
         'HOST': 'localhost',
         'PORT': '5432',
     }
